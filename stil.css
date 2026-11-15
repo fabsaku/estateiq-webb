@@ -40,8 +40,6 @@ footer { font-size: 14px; }
 @media (max-width: 760px) {
   main { margin: 8px; }
   header, section, footer { padding: 16px; }
-}
-@media (max-width: 760px) {
   table { table-layout: fixed; }
   th, td { overflow-wrap: anywhere; padding-right: 6px; font-size: 12px; }
 }
