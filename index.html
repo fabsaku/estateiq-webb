@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="EstateIQ samlar uppgifter om svenska fastigheter ur öppna källor på en sida, med källa och datum på varje rad. Gratis att prova på iPhone.">
+<meta name="description" content="EstateIQ samlar uppgifter om svenska fastigheter ur öppna källor på en sida, med källa och datum på varje rad. Kommer för iPhone. Lämna din e-post så hör vi av oss när appen finns.">
 <link rel="canonical" href="https://estateiq.se/">
 <meta name="theme-color" content="#0A1410">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
@@ -13,36 +13,307 @@
 <meta property="og:locale" content="sv_SE">
 <meta property="og:site_name" content="EstateIQ">
 <meta property="og:title" content="EstateIQ">
-<meta property="og:description" content="EstateIQ samlar uppgifter om svenska fastigheter ur öppna källor på en sida, med källa och datum på varje rad. Gratis att prova på iPhone.">
+<meta property="og:description" content="EstateIQ samlar uppgifter om svenska fastigheter ur öppna källor på en sida, med källa och datum på varje rad. Kommer för iPhone. Lämna din e-post så hör vi av oss när appen finns.">
 <meta property="og:url" content="https://estateiq.se/">
 <meta property="og:image" content="https://estateiq.se/og.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
-<script type="application/ld+json">{"@context": "https://schema.org", "@type": "SoftwareApplication", "name": "EstateIQ", "applicationCategory": "FinanceApplication", "operatingSystem": "iOS", "inLanguage": "sv", "description": "EstateIQ samlar uppgifter om svenska fastigheter ur öppna källor på en sida, med källa och datum på varje rad. Gratis att prova på iPhone.", "offers": {"@type": "Offer", "price": "0", "priceCurrency": "SEK"}, "publisher": {"@type": "Organization", "name": "Fabian SK", "url": "https://estateiq.se/"}}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "SoftwareApplication", "name": "EstateIQ", "applicationCategory": "FinanceApplication", "operatingSystem": "iOS", "inLanguage": "sv", "description": "EstateIQ samlar uppgifter om svenska fastigheter ur öppna källor på en sida, med källa och datum på varje rad. Kommer för iPhone. Lämna din e-post så hör vi av oss när appen finns.", "offers": {"@type": "Offer", "price": "0", "priceCurrency": "SEK"}, "publisher": {"@type": "Organization", "name": "Fabian SK", "url": "https://estateiq.se/"}}</script>
 <title>EstateIQ</title>
-<link rel="stylesheet" href="stil.css">
+<style>
+@font-face { font-family: "Space Grotesk"; src: url("SpaceGrotesk-Bold.ttf"); font-weight: 700; font-display: swap; }
+@font-face { font-family: "Space Grotesk"; src: url("SpaceGrotesk-Medium.ttf"); font-weight: 500; font-display: swap; }
+@font-face { font-family: "IBM Plex Mono"; src: url("IBMPlexMono-Regular.ttf"); font-weight: 400; font-display: swap; }
+
+:root { --botten: #0A1410; --salvia: #7F9C8C; --salvia-ljus: #A9BDB1; --text: #F2F5F0; --lime: #C8F14F; --linje: 2.5px; --mono: "IBM Plex Mono", ui-monospace, monospace; }
+* { box-sizing: border-box; margin: 0; border-radius: 0; }
+html, body { height: 100%; }
+body { background: var(--botten); color: var(--text); font-family: "Space Grotesk", system-ui, sans-serif; font-weight: 500; overflow: hidden; }
+
+/* Flygningen ligger under allt. Bladets ram ligger över. */
+#stad { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
+.ram { position: fixed; inset: 16px; border: var(--linje) solid var(--salvia); pointer-events: none; }
+
+/* Mätpunkter på staden. Placeras av skriptet. */
+.noder { position: fixed; inset: 0; pointer-events: none; overflow: hidden; }
+.nod { position: absolute; left: 0; top: 0; display: flex; align-items: center; gap: 10px; will-change: transform, opacity; }
+.nod i { position: relative; display: block; width: 9px; height: 9px; margin: -4.5px 0 0 -4.5px; background: var(--lime); }
+.nod i::after { content: ""; position: absolute; inset: -3px; border: 1.5px solid var(--lime); animation: puls 3.4s ease-out infinite; }
+.nod:nth-child(2n) i::after { animation-delay: 1.1s; }
+.nod:nth-child(3n) i::after { animation-delay: 2.2s; }
+.nod span { display: none; font: 400 10.5px var(--mono); letter-spacing: .1em; color: var(--salvia-ljus); margin-top: -4.5px; white-space: nowrap; }
+@keyframes puls { 0% { transform: scale(1); opacity: .95; } 70%, 100% { transform: scale(3.6); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .nod i::after { animation: none; opacity: 0; } }
+
+.topp {
+  position: relative; z-index: 2; height: 100%; padding: clamp(34px, 6vh, 64px) 28px 0;
+  display: flex; flex-direction: column; align-items: center; text-align: center; pointer-events: none;
+}
+.topp > * { pointer-events: auto; }
+.kod { font: 400 12px var(--mono); letter-spacing: .12em; color: var(--salvia-ljus); }
+.logga { display: block; height: clamp(64px, 9.5vw, 128px); width: auto; margin: 0 0 clamp(18px, 3.2vh, 34px); }
+h1 { font-weight: 700; font-size: min(6.9vw, 84px); line-height: 1; letter-spacing: -.035em; white-space: nowrap; }
+h1 em { font-style: normal; color: var(--lime); }
+.under { margin-top: 14px; color: var(--salvia-ljus); font-size: clamp(15px, 1.25vw, 17px); line-height: 1.45; max-width: 31em; }
+
+form { margin-top: clamp(20px, 3.4vh, 34px); display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; width: min(100%, 520px); }
+.dold { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+input[type=email] {
+  flex: 1 1 250px; min-height: 54px; padding: 0 16px; background: var(--botten); color: var(--text);
+  border: var(--linje) solid var(--salvia); font: 400 16px var(--mono);
+}
+input[type=email]::placeholder { color: var(--salvia); }
+input[type=email]:focus { outline: none; border-color: var(--lime); }
+button { min-height: 54px; padding: 0 22px; cursor: pointer; background: var(--lime); color: var(--botten); border: var(--linje) solid var(--lime); font: 400 16px var(--mono); }
+button:focus-visible { outline: var(--linje) solid var(--text); outline-offset: 3px; }
+.not, .svar { font: 400 12px/1.5 var(--mono); color: var(--salvia-ljus); background: var(--botten); padding: 2px 8px; }
+.not { margin: 0 auto; }
+.not a, footer a { color: var(--salvia-ljus); }
+.svar { color: var(--text); }
+.svar:empty { display: none; }
+
+footer {
+  position: fixed; z-index: 2; left: 16px; right: 16px; bottom: 16px;
+  display: flex; flex-wrap: wrap; gap: 4px 22px; justify-content: space-between; align-items: center;
+  border: var(--linje) solid var(--salvia); border-width: var(--linje) var(--linje) var(--linje); padding: 9px 16px; background: var(--botten);
+  font: 400 11.5px var(--mono); letter-spacing: .04em; color: var(--salvia-ljus);
+}
+footer nav { display: flex; flex-wrap: wrap; gap: 2px 18px; }
+footer a { display: inline-block; padding: 5px 0; }
+.kredit { white-space: nowrap; }
+
+@media (max-width: 720px) {
+  button { flex: 1 1 100%; }
+  .nod span { display: none; display: none; }
+  footer { font-size: 10.5px; padding: 7px 12px; }
+  .kredit { order: 3; flex-basis: 100%; }
+}
+</style>
 </head>
 <body>
-<main>
-  <header>
-    <p class="kod">ESTATEIQ</p>
-    <h1>EstateIQ</h1>
-    <p>Allt om din fastighet, byggt på öppna källor.</p>
-  </header>
+<canvas id="stad" aria-hidden="true"></canvas>
+<div class="noder" aria-hidden="true"></div>
+<div class="ram" aria-hidden="true"></div>
 
-  <section>
-    <h2>Sidor</h2>
-    <ul>
-      <li><a href="support/">Support</a></li>
-      <li><a href="integritet/">Integritetspolicy</a></li>
-      <li><a href="villkor/">Användarvillkor</a></li>
-    </ul>
-  </section>
+<main class="topp">
+  <svg class="logga" viewBox="228 263 816 540" role="img" aria-label="EstateIQ">
+    <path fill="#F2F5F0" d="M228 282h266v72H305v97h172v72H305v102h192v72H228zM574 403h76v294h-76z"/>
+    <path fill="#F2F5F0" fill-rule="evenodd" d="M866 272h13a165 165 0 0 1 165 165v100a165 165 0 0 1-165 165h-13a165 165 0 0 1-165-165V437a165 165 0 0 1 165-165zM873 343a93 93 0 0 1 93 93v105a93 93 0 0 1-186 0V436a93 93 0 0 1 93-93z"/>
+    <path fill="#F2F5F0" d="M835 670v80q0 52 52 52h75v-60h-37q-15 0-15-15v-57z"/>
+    <circle fill="#C8F14F" cx="612" cy="314" r="51"/>
+  </svg>
+  <h1>Vad vet du <em>om ditt hus?</em></h1>
 
-  <footer>
-    <p>Ges ut av Fabian SK. <a href="mailto:contactestateiq@gmail.com">contactestateiq@gmail.com</a></p>
-  </footer>
+  <!-- Ingen mottagartjänst än: formuläret öppnar besökarens mejlprogram med ett färdigt mejl till oss. -->
+  <form id="anmalan" action="" method="post" novalidate>
+    <label class="dold" for="epost">Din e-postadress</label>
+    <input id="epost" name="email" type="email" inputmode="email" autocomplete="email" placeholder="din@epost.se" required>
+    <button type="submit">Meddela mig</button>
+    <p class="not">Ett mejl när appen finns för iPhone. <a href="/integritet/">Integritetspolicy</a></p>
+    <p class="svar" role="status" aria-live="polite"></p>
+  </form>
 </main>
+
+<footer>
+  <span class="kredit">Byggnader © <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>-bidragsgivare, ODbL</span>
+  <nav>
+    <a href="/support/">Support</a>
+    <a href="/integritet/">Integritet</a>
+    <a href="/villkor/">Villkor</a>
+    <a href="https://www.instagram.com/estateiqse/">Instagram</a>
+  </nav>
+</footer>
+
+<script src="stockholm.js"></script>
+<script>
+// Utan mottagartjänst skickar sidan ingenting själv. Den öppnar besökarens mejlprogram med ett färdigt mejl.
+document.getElementById('anmalan').addEventListener('submit', function (h) {
+  if (this.getAttribute('action')) return;
+  h.preventDefault();
+  var falt = this.querySelector('input[type=email]'), svar = this.querySelector('.svar');
+  if (!falt.value || !falt.checkValidity()) { svar.textContent = 'Skriv en giltig e-postadress.'; falt.focus(); return; }
+  var amne = 'Meddela mig när EstateIQ finns', text = 'Hej! Meddela mig när EstateIQ finns för iPhone.\n\nMin adress: ' + falt.value;
+  window.location.href = 'mailto:contactestateiq@gmail.com?subject=' + encodeURIComponent(amne) + '&body=' + encodeURIComponent(text);
+  svar.textContent = 'Ditt mejlprogram öppnas. Skicka mejlet, så hör vi av oss.';
+});
+
+// Flygningen: centrala Stockholm som trådmodell, ritad med WebGL utan bibliotek.
+(function () {
+  'use strict';
+  var data = window.STHLM, duk = document.getElementById('stad');
+  var gl = duk.getContext('webgl', { antialias: true, alpha: false, powerPreference: 'low-power' });
+  if (!data || !gl) return; // Utan WebGL står bladet kvar med ram, logga och formulär.
+
+  var LAT0 = 59.3275, LON0 = 18.0690, KY = 110540, KX = Math.cos(LAT0 * Math.PI / 180) * 111320;
+  var BOTTEN = [10 / 255, 20 / 255, 16 / 255];
+  var lugnt = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // ---- Geometri ----
+  function trianglar(r) { // öronklippning av en moturs ring
+    var n = r.length, idx = [], ut = [], i, varv = 0;
+    for (i = 0; i < n; i++) idx.push(i);
+    while (idx.length > 3 && varv++ < n * n) {
+      var klippt = false;
+      for (i = 0; i < idx.length; i++) {
+        var m = idx.length, a = r[idx[(i + m - 1) % m]], b = r[idx[i]], c = r[idx[(i + 1) % m]];
+        if ((b[0] - a[0]) * (c[1] - b[1]) - (b[1] - a[1]) * (c[0] - b[0]) <= 0) continue;
+        var fri = true;
+        for (var k = 0; k < m && fri; k++) {
+          var p = r[idx[k]];
+          if (p === a || p === b || p === c) continue;
+          var d1 = (b[0] - a[0]) * (p[1] - a[1]) - (b[1] - a[1]) * (p[0] - a[0]);
+          var d2 = (c[0] - b[0]) * (p[1] - b[1]) - (c[1] - b[1]) * (p[0] - b[0]);
+          var d3 = (a[0] - c[0]) * (p[1] - c[1]) - (a[1] - c[1]) * (p[0] - c[0]);
+          if (d1 >= 0 && d2 >= 0 && d3 >= 0) fri = false;
+        }
+        if (!fri) continue;
+        ut.push(idx[(i + m - 1) % m], idx[i], idx[(i + 1) % m]);
+        idx.splice(i, 1); klippt = true; break;
+      }
+      if (!klippt) break;
+    }
+    for (i = 1; i < idx.length - 1; i++) ut.push(idx[0], idx[i], idx[i + 1]);
+    return ut;
+  }
+
+  var ytor = [], kanter = [];
+  data.b.forEach(function (b) {
+    var h = b[0], r = [], i, n;
+    for (i = 1; i < b.length; i += 2) r.push([b[i] / 2, b[i + 1] / 2]);
+    n = r.length;
+    for (i = 0; i < n; i++) {
+      var p = r[i], q = r[(i + 1) % n], o = r[(i + n - 1) % n];
+      ytor.push(p[0], p[1], 0, q[0], q[1], 0, q[0], q[1], h, p[0], p[1], 0, q[0], q[1], h, p[0], p[1], h);
+      kanter.push(p[0], p[1], h, q[0], q[1], h);
+      // Lodräta kanter bara i riktiga hörn, annars blir fasaderna randiga.
+      var ux = p[0] - o[0], uy = p[1] - o[1], vx = q[0] - p[0], vy = q[1] - p[1];
+      var sv = Math.abs(ux * vy - uy * vx) / ((Math.hypot(ux, uy) * Math.hypot(vx, vy)) || 1);
+      if (sv > 0.38) kanter.push(p[0], p[1], 0, p[0], p[1], h);
+    }
+    var t = trianglar(r);
+    for (i = 0; i < t.length; i++) ytor.push(r[t[i]][0], r[t[i]][1], h);
+  });
+
+  var rutnat = [], R = 4500, STEG = 90, v;
+  for (v = -R; v <= R; v += STEG) rutnat.push(v, -R, 0, v, R, 0, -R, v, 0, R, v, 0);
+
+  var strand = [];
+  data.s.forEach(function (s) {
+    for (var i = 0; i + 3 < s.length; i += 2) strand.push(s[i] / 2, s[i + 1] / 2, 0.5, s[i + 2] / 2, s[i + 3] / 2, 0.5);
+  });
+
+  function plats(lat, lon) { return [(lon - LON0) * KX, (lat - LAT0) * KY]; }
+  var punkter = [
+    ['STADSHUSET', 59.3274, 18.0543, 110], ['RIKSDAGSHUSET', 59.3276, 18.0679, 70],
+    ['KUNGLIGA SLOTTET', 59.3268, 18.0717, 75], ['SERGELS TORG', 59.3324, 18.0646, 85],
+    ['NATIONALMUSEUM', 59.3286, 18.0783, 70], ['KATARINA KYRKA', 59.3170, 18.0780, 95]
+  ].map(function (p) { var q = plats(p[1], p[2]); return { namn: p[0], x: q[0], y: q[1], z: p[3] }; });
+  var lod = [];
+  punkter.forEach(function (p) { lod.push(p.x, p.y, 0, p.x, p.y, p.z); });
+
+  var hallare = document.querySelector('.noder');
+  punkter.forEach(function (p) {
+    p.el = document.createElement('div'); p.el.className = 'nod';
+    p.el.innerHTML = '<i></i>';
+    hallare.appendChild(p.el);
+  });
+
+  // ---- WebGL ----
+  function skuggare(typ, kod) { var s = gl.createShader(typ); gl.shaderSource(s, kod); gl.compileShader(s); return s; }
+  var prog = gl.createProgram();
+  gl.attachShader(prog, skuggare(gl.VERTEX_SHADER,
+    'attribute vec3 p; uniform mat4 vp; varying float d; void main(){ gl_Position = vp * vec4(p, 1.0); d = gl_Position.w; }'));
+  gl.attachShader(prog, skuggare(gl.FRAGMENT_SHADER,
+    'precision mediump float; uniform vec3 farg; uniform vec3 botten; uniform vec2 dis; varying float d;' +
+    'void main(){ float f = smoothstep(dis.x, dis.y, d); gl_FragColor = vec4(mix(farg, botten, f), 1.0); }'));
+  gl.linkProgram(prog); gl.useProgram(prog);
+  var uVp = gl.getUniformLocation(prog, 'vp'), uFarg = gl.getUniformLocation(prog, 'farg'), uDis = gl.getUniformLocation(prog, 'dis');
+  gl.uniform3fv(gl.getUniformLocation(prog, 'botten'), BOTTEN);
+  var aP = gl.getAttribLocation(prog, 'p'); gl.enableVertexAttribArray(aP);
+
+  function buffert(tal) { var b = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, b); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(tal), gl.STATIC_DRAW); return { b: b, n: tal.length / 3 }; }
+  var bYtor = buffert(ytor), bKanter = buffert(kanter), bRutnat = buffert(rutnat), bStrand = buffert(strand), bLod = buffert(lod);
+  ytor = kanter = rutnat = strand = null;
+
+  function rita(b, sort, farg) {
+    gl.bindBuffer(gl.ARRAY_BUFFER, b.b); gl.vertexAttribPointer(aP, 3, gl.FLOAT, false, 0, 0);
+    gl.uniform3fv(uFarg, farg); gl.drawArrays(sort, 0, b.n);
+  }
+
+  // ---- Kamera ----
+  function perspektiv(fov, bild, nara, fjarran) {
+    var f = 1 / Math.tan(fov / 2), nf = 1 / (nara - fjarran);
+    return [f / bild, 0, 0, 0, 0, f, 0, 0, 0, 0, (fjarran + nara) * nf, -1, 0, 0, 2 * fjarran * nara * nf, 0];
+  }
+  function sikt(e, m) { // z uppåt
+    var fx = m[0] - e[0], fy = m[1] - e[1], fz = m[2] - e[2], l = Math.hypot(fx, fy, fz); fx /= l; fy /= l; fz /= l;
+    var sx = fy, sy = -fx, sz = 0, sl = Math.hypot(sx, sy); sx /= sl; sy /= sl;
+    var ux = sy * fz - sz * fy, uy = sz * fx - sx * fz, uz = sx * fy - sy * fx;
+    return [sx, ux, -fx, 0, sy, uy, -fy, 0, sz, uz, -fz, 0,
+      -(sx * e[0] + sy * e[1] + sz * e[2]), -(ux * e[0] + uy * e[1] + uz * e[2]), fx * e[0] + fy * e[1] + fz * e[2], 1];
+  }
+  function gang(a, b) {
+    var ut = new Float32Array(16);
+    for (var k = 0; k < 4; k++) for (var r = 0; r < 4; r++)
+      ut[k * 4 + r] = a[r] * b[k * 4] + a[4 + r] * b[k * 4 + 1] + a[8 + r] * b[k * 4 + 2] + a[12 + r] * b[k * 4 + 3];
+    return ut;
+  }
+
+  var B = 0, H = 0, tathet = 1;
+  function storlek() {
+    tathet = Math.min(window.devicePixelRatio || 1, 2);
+    B = duk.clientWidth; H = duk.clientHeight;
+    duk.width = Math.round(B * tathet); duk.height = Math.round(H * tathet);
+    gl.viewport(0, 0, duk.width, duk.height);
+    golv = formular.getBoundingClientRect().bottom + 24; // mätpunkter visas bara under rutan
+  }
+
+  var formular = document.getElementById('anmalan'), golv = 0;
+  function bild(ms) {
+    var t = ms / 1000;
+    // Kameran glider i en långsam slinga och vrider sig ett varv på drygt tre minuter.
+    var kurs = 1.15 + t * 0.031;
+    var mx = 80 + 520 * Math.sin(t * 0.019 + 0.4), my = 60 + 360 * Math.sin(t * 0.027 + 1.9);
+    var hojd = 400 + 40 * Math.sin(t * 0.05), avst = 1050;
+    var oga = [mx - Math.cos(kurs) * avst, my - Math.sin(kurs) * avst, hojd];
+    var stående = H > B;
+    var vp = gang(perspektiv((stående ? 52 : 38) * Math.PI / 180, B / H, 8, 12000), sikt(oga, [mx, my, 10]));
+    // Sikta lägre i bilden: toppen blir fjärran och lugn, där loggan och rutan står.
+    var ned = stående ? -0.52 : -0.74;
+    for (var k = 0; k < 4; k++) vp[k * 4 + 1] += ned * vp[k * 4 + 3];
+
+    gl.clearColor(BOTTEN[0], BOTTEN[1], BOTTEN[2], 1);
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+    gl.uniformMatrix4fv(uVp, false, vp);
+    gl.uniform2f(uDis, 600, 2900);
+    gl.enable(gl.DEPTH_TEST); gl.depthFunc(gl.LEQUAL);
+
+    gl.depthMask(true); gl.enable(gl.POLYGON_OFFSET_FILL); gl.polygonOffset(1.5, 2);
+    rita(bYtor, gl.TRIANGLES, [0.052, 0.098, 0.079]);
+    gl.disable(gl.POLYGON_OFFSET_FILL); gl.depthMask(false);
+    rita(bRutnat, gl.LINES, [0.2, 0.3, 0.255]);
+    rita(bStrand, gl.LINES, [0.42, 0.53, 0.47]);
+    rita(bKanter, gl.LINES, [0.56, 0.69, 0.62]);
+    rita(bLod, gl.LINES, [0.784, 0.945, 0.31]);
+
+    punkter.forEach(function (p) {
+      var x = vp[0] * p.x + vp[4] * p.y + vp[8] * p.z + vp[12], y = vp[1] * p.x + vp[5] * p.y + vp[9] * p.z + vp[13];
+      var w = vp[3] * p.x + vp[7] * p.y + vp[11] * p.z + vp[15];
+      var sx = (x / w * 0.5 + 0.5) * B, sy = (0.5 - y / w * 0.5) * H;
+      var syns = w > 60 && sx > 30 && sx < B - 30 && sy > golv && sy < H - 70;
+      var dis = Math.min(1, Math.max(0, (w - 700) / 2600));
+      p.el.style.opacity = syns ? (1 - dis * dis).toFixed(2) : 0;
+      if (syns) p.el.style.transform = 'translate(' + sx.toFixed(1) + 'px,' + sy.toFixed(1) + 'px)';
+    });
+  }
+
+  var start = null;
+  function slinga(ms) { if (start === null) start = ms; bild(ms - start); requestAnimationFrame(slinga); }
+  storlek();
+  window.addEventListener('resize', function () { storlek(); if (lugnt) bild(0); });
+  if (lugnt) bild(0); else requestAnimationFrame(slinga);
+})();
+</script>
 </body>
 </html>
