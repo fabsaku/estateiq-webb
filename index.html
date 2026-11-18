@@ -193,6 +193,64 @@ document.getElementById('anmalan').addEventListener('submit', function (h) {
     for (i = 0; i < t.length; i++) ytor.push(r[t[i]][0], r[t[i]][1], h);
   });
 
+  // Broar: ett däck på pelare. Däcket täcker vattnet under sig och kanterna ritas som husens.
+  function rad(a, fran) { var r = []; for (var i = fran; i < a.length; i += 2) r.push([a[i] / 2, a[i + 1] / 2]); return r; }
+  function langs(p, steg, gor) { // anropar gor(x, y, nx, ny) var steg:e meter längs linjen, med normalen
+    var kvar = steg / 2;
+    for (var i = 0; i + 1 < p.length; i++) {
+      var dx = p[i + 1][0] - p[i][0], dy = p[i + 1][1] - p[i][1], l = Math.hypot(dx, dy);
+      if (!l) continue;
+      for (; kvar <= l; kvar += steg) gor(p[i][0] + dx * kvar / l, p[i][1] + dy * kvar / l, -dy / l, dx / l);
+      kvar -= l;
+    }
+  }
+  (data.br || []).forEach(function (b) {
+    var halv = b[0] / 2, z = b[1], p = rad(b, 2), va = [], ho = [], i, n = p.length;
+    for (i = 0; i < n; i++) {
+      var a = p[Math.max(i - 1, 0)], c = p[Math.min(i + 1, n - 1)], dx = c[0] - a[0], dy = c[1] - a[1], l = Math.hypot(dx, dy) || 1;
+      va.push([p[i][0] - dy / l * halv, p[i][1] + dx / l * halv]); ho.push([p[i][0] + dy / l * halv, p[i][1] - dx / l * halv]);
+    }
+    for (i = 0; i + 1 < n; i++) {
+      ytor.push(va[i][0], va[i][1], z, ho[i][0], ho[i][1], z, ho[i + 1][0], ho[i + 1][1], z,
+        va[i][0], va[i][1], z, ho[i + 1][0], ho[i + 1][1], z, va[i + 1][0], va[i + 1][1], z);
+      kanter.push(va[i][0], va[i][1], z, va[i + 1][0], va[i + 1][1], z, ho[i][0], ho[i][1], z, ho[i + 1][0], ho[i + 1][1], z);
+    }
+    langs(p, 45, function (x, y, nx, ny) {
+      kanter.push(x + nx * halv, y + ny * halv, 0, x + nx * halv, y + ny * halv, z, x - nx * halv, y - ny * halv, 0, x - nx * halv, y - ny * halv, z);
+    });
+  });
+
+  // Spår ovan jord: en linje med syllar, som järnväg ritas på en karta.
+  var spar = [];
+  (data.sp || []).forEach(function (b) {
+    var z = b[0] + 0.5, p = rad(b, 1);
+    for (var i = 0; i + 1 < p.length; i++) spar.push(p[i][0], p[i][1], z, p[i + 1][0], p[i + 1][1], z);
+    langs(p, 9, function (x, y, nx, ny) { spar.push(x + nx * 1.8, y + ny * 1.8, z, x - nx * 1.8, y - ny * 1.8, z); });
+  });
+
+  // Tunnlar: streckade linjer som syns genom marken. Tunnelbanan ljusare än järnvägstunnlarna.
+  var tbana = [], tunnel = [];
+  (data.tu || []).forEach(function (b) {
+    var mal = b[0] ? tbana : tunnel, p = rad(b, 1), kvar = 0, pa = true;
+    for (var i = 0; i + 1 < p.length; i++) {
+      var dx = p[i + 1][0] - p[i][0], dy = p[i + 1][1] - p[i][1], l = Math.hypot(dx, dy), t = 0;
+      if (!l) continue;
+      while (t < l) {
+        var bit = Math.min((pa ? 11 : 7) - kvar, l - t);
+        if (pa) mal.push(p[i][0] + dx * t / l, p[i][1] + dy * t / l, 0.6, p[i][0] + dx * (t + bit) / l, p[i][1] + dy * (t + bit) / l, 0.6);
+        t += bit; kvar += bit;
+        if (kvar >= (pa ? 11 : 7) - 1e-6) { kvar = 0; pa = !pa; }
+      }
+    }
+  });
+
+  // Stationer: en liten ruta på marken, ställd på hörn.
+  var station = [];
+  for (v = 0; v + 1 < (data.st || []).length; v += 2) {
+    var sx = data.st[v] / 2, sy = data.st[v + 1] / 2, sr = 13;
+    station.push(sx - sr, sy, 1, sx, sy + sr, 1, sx, sy + sr, 1, sx + sr, sy, 1, sx + sr, sy, 1, sx, sy - sr, 1, sx, sy - sr, 1, sx - sr, sy, 1);
+  }
+
   var rutnat = [], R = 4500, STEG = 90, v;
   for (v = -R; v <= R; v += STEG) rutnat.push(v, -R, 0, v, R, 0, -R, v, 0, R, v, 0);
 
@@ -229,7 +287,8 @@ document.getElementById('anmalan').addEventListener('submit', function (h) {
   ytor = new Float32Array(ytor); kanter = new Float32Array(kanter); rutnat = new Float32Array(rutnat);
   strand = new Float32Array(strand); lod = new Float32Array(lod);
   vatten = new Float32Array(vatten); vagor = new Float32Array(vagor);
-  var uVp, uFarg, uDis, aP, bYtor, bKanter, bRutnat, bStrand, bLod, bVatten, bVagor;
+  spar = new Float32Array(spar); tbana = new Float32Array(tbana); tunnel = new Float32Array(tunnel); station = new Float32Array(station);
+  var uVp, uFarg, uDis, aP, bYtor, bKanter, bRutnat, bStrand, bLod, bVatten, bVagor, bSpar, bTbana, bTunnel, bStation;
 
   function skuggare(typ, kod) {
     var s = gl.createShader(typ); gl.shaderSource(s, kod); gl.compileShader(s);
@@ -252,6 +311,7 @@ document.getElementById('anmalan').addEventListener('submit', function (h) {
     aP = gl.getAttribLocation(prog, 'p'); gl.enableVertexAttribArray(aP);
     bYtor = buffert(ytor); bKanter = buffert(kanter); bRutnat = buffert(rutnat); bStrand = buffert(strand); bLod = buffert(lod);
     bVatten = buffert(vatten); bVagor = buffert(vagor);
+    bSpar = buffert(spar); bTbana = buffert(tbana); bTunnel = buffert(tunnel); bStation = buffert(station);
     return true;
   }
   if (!bygg()) { duk.style.display = 'none'; hallare.style.display = 'none'; return; }
@@ -322,6 +382,12 @@ document.getElementById('anmalan').addEventListener('submit', function (h) {
     rita(bVagor, gl.LINES, [0.13, 0.215, 0.195]);
     rita(bStrand, gl.LINES, [0.6, 0.74, 0.66]);
     rita(bKanter, gl.LINES, [0.56, 0.69, 0.62]);
+    rita(bSpar, gl.LINES, [0.7, 0.81, 0.75]);
+    gl.disable(gl.DEPTH_TEST); // det som ligger under jord syns genom hus och mark
+    rita(bTunnel, gl.LINES, [0.27, 0.37, 0.33]);
+    rita(bTbana, gl.LINES, [0.62, 0.73, 0.67]);
+    rita(bStation, gl.LINES, [0.95, 0.96, 0.94]);
+    gl.enable(gl.DEPTH_TEST);
     rita(bLod, gl.LINES, [0.784, 0.945, 0.31]);
 
     punkter.forEach(function (p) {
