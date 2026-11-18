@@ -35,15 +35,14 @@ body { background: var(--botten); color: var(--text); font-family: "Space Grotes
 #stad { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
 .ram { position: fixed; inset: 16px; border: var(--linje) solid var(--salvia); pointer-events: none; }
 
-/* Mätpunkter på staden. Placeras av skriptet. */
+/* Tunnelbanans och pendeltågens stationer. Placeras av skriptet och blinkar när ett tåg går. */
 .noder { position: fixed; inset: 0; pointer-events: none; overflow: hidden; }
 .nod { position: absolute; left: 0; top: 0; will-change: transform, opacity; }
-.nod i { position: relative; display: block; width: 9px; height: 9px; margin: -4.5px 0 0 -4.5px; background: var(--lime); }
-.nod i::after { content: ""; position: absolute; inset: -3px; border: 1.5px solid var(--lime); animation: puls 3.4s ease-out infinite; }
-.nod:nth-child(2n) i::after { animation-delay: 1.1s; }
-.nod:nth-child(3n) i::after { animation-delay: 2.2s; }
-@keyframes puls { 0% { transform: scale(1); opacity: .95; } 70%, 100% { transform: scale(3.6); opacity: 0; } }
-@media (prefers-reduced-motion: reduce) { .nod i::after { animation: none; opacity: 0; } }
+.nod i { position: relative; display: block; width: 7px; height: 7px; margin: -3.5px 0 0 -3.5px; background: var(--lime); }
+.nod i::after { content: ""; position: absolute; inset: -3px; border: 1.5px solid var(--lime); opacity: 0; }
+.nod.gar i::after { animation: puls 2.8s ease-out 1; }
+@keyframes puls { 0% { transform: scale(1); opacity: .95; } 70%, 100% { transform: scale(4.4); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .nod.gar i::after { animation: none; } }
 
 .topp {
   position: relative; z-index: 2; min-height: 100%; padding: clamp(34px, 6vh, 64px) 28px 96px; /* nederkanten lämnar plats åt sidfoten */
@@ -85,7 +84,7 @@ footer a { display: inline-block; padding: 5px 0; }
 @media (max-width: 720px) {
   button { flex: 1 1 100%; }
   footer { font-size: 10.5px; padding: 7px 12px; }
-  .kredit { order: 3; flex-basis: 100%; }
+  .kredit { order: 3; flex-basis: 100%; white-space: normal; }
 }
 </style>
 </head>
@@ -114,7 +113,7 @@ footer a { display: inline-block; padding: 5px 0; }
 </main>
 
 <footer>
-  <span class="kredit">Byggnader © <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>-bidragsgivare, ODbL</span>
+  <span class="kredit">Karta © <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>-bidragsgivare, ODbL · Avgångar från <a href="https://www.trafiklab.se/">Trafiklab.se</a></span>
   <nav>
     <a href="/support/">Support</a>
     <a href="/integritet/">Integritet</a>
@@ -244,13 +243,6 @@ document.getElementById('anmalan').addEventListener('submit', function (h) {
     }
   });
 
-  // Stationer: en liten ruta på marken, ställd på hörn.
-  var station = [];
-  for (v = 0; v + 1 < (data.st || []).length; v += 2) {
-    var sx = data.st[v] / 2, sy = data.st[v + 1] / 2, sr = 13;
-    station.push(sx - sr, sy, 1, sx, sy + sr, 1, sx, sy + sr, 1, sx + sr, sy, 1, sx + sr, sy, 1, sx, sy - sr, 1, sx, sy - sr, 1, sx - sr, sy, 1);
-  }
-
   var rutnat = [], R = 4500, STEG = 90, v;
   for (v = -R; v <= R; v += STEG) rutnat.push(v, -R, 0, v, R, 0, -R, v, 0, R, v, 0);
 
@@ -267,11 +259,10 @@ document.getElementById('anmalan').addEventListener('submit', function (h) {
     for (var vy = Math.ceil(y1 / VAG) * VAG; vy < y2; vy += VAG) vagor.push(x1, vy, 0.2, x2, vy, 0.2);
   }
 
-  // Mätpunkterna är prydnad utan namn: ungefärliga lägen (lat, lon, höjd i meter) spridda över innerstaden.
-  var punkter = [
-    [59.3274, 18.0543, 110], [59.3276, 18.0679, 70], [59.3268, 18.0717, 75],
-    [59.3324, 18.0646, 85], [59.3286, 18.0783, 70], [59.3170, 18.0780, 95]
-  ].map(function (p) { return { x: (p[1] - LON0) * KX, y: (p[0] - LAT0) * KY, z: p[2] }; });
+  // Stationerna är sidans mätpunkter: en lime punkt på ett lod över varje station.
+  var punkter = [];
+  for (v = 0; v + 3 < (data.st || []).length; v += 4)
+    punkter.push({ x: data.st[v] / 2, y: data.st[v + 1] / 2, z: 42, plats: data.st[v + 2], slag: data.st[v + 3] ? 'TRAIN' : 'METRO' });
   var lod = [];
   punkter.forEach(function (p) { lod.push(p.x, p.y, 0, p.x, p.y, p.z); });
 
@@ -287,8 +278,8 @@ document.getElementById('anmalan').addEventListener('submit', function (h) {
   ytor = new Float32Array(ytor); kanter = new Float32Array(kanter); rutnat = new Float32Array(rutnat);
   strand = new Float32Array(strand); lod = new Float32Array(lod);
   vatten = new Float32Array(vatten); vagor = new Float32Array(vagor);
-  spar = new Float32Array(spar); tbana = new Float32Array(tbana); tunnel = new Float32Array(tunnel); station = new Float32Array(station);
-  var uVp, uFarg, uDis, aP, bYtor, bKanter, bRutnat, bStrand, bLod, bVatten, bVagor, bSpar, bTbana, bTunnel, bStation;
+  spar = new Float32Array(spar); tbana = new Float32Array(tbana); tunnel = new Float32Array(tunnel);
+  var uVp, uFarg, uDis, aP, bYtor, bKanter, bRutnat, bStrand, bLod, bVatten, bVagor, bSpar, bTbana, bTunnel;
 
   function skuggare(typ, kod) {
     var s = gl.createShader(typ); gl.shaderSource(s, kod); gl.compileShader(s);
@@ -311,7 +302,7 @@ document.getElementById('anmalan').addEventListener('submit', function (h) {
     aP = gl.getAttribLocation(prog, 'p'); gl.enableVertexAttribArray(aP);
     bYtor = buffert(ytor); bKanter = buffert(kanter); bRutnat = buffert(rutnat); bStrand = buffert(strand); bLod = buffert(lod);
     bVatten = buffert(vatten); bVagor = buffert(vagor);
-    bSpar = buffert(spar); bTbana = buffert(tbana); bTunnel = buffert(tunnel); bStation = buffert(station);
+    bSpar = buffert(spar); bTbana = buffert(tbana); bTunnel = buffert(tunnel);
     return true;
   }
   if (!bygg()) { duk.style.display = 'none'; hallare.style.display = 'none'; return; }
@@ -386,7 +377,6 @@ document.getElementById('anmalan').addEventListener('submit', function (h) {
     gl.disable(gl.DEPTH_TEST); // det som ligger under jord syns genom hus och mark
     rita(bTunnel, gl.LINES, [0.27, 0.37, 0.33]);
     rita(bTbana, gl.LINES, [0.62, 0.73, 0.67]);
-    rita(bStation, gl.LINES, [0.95, 0.96, 0.94]);
     gl.enable(gl.DEPTH_TEST);
     rita(bLod, gl.LINES, [0.784, 0.945, 0.31]);
 
@@ -400,6 +390,35 @@ document.getElementById('anmalan').addEventListener('submit', function (h) {
       if (syns) p.el.style.transform = 'translate(' + sx.toFixed(1) + 'px,' + sy.toFixed(1) + 'px)';
     });
   }
+
+  // Avgångar: en station blinkar när ett tåg går därifrån. Tiderna kommer från SL via Trafiklab.se.
+  // En fråga var fjärde sekund, en station i taget, bara medan sidan syns och högst en kvart.
+  function avgangar() {
+    var tur = 0, blinkat = {}, slut = Date.now() + 15 * 60000;
+    // SL svarar i svensk tid utan zon: räkna ut hur långt besökarens klocka ligger från Stockholms.
+    var nu = new Date(), skift = new Date(nu.toLocaleString('sv-SE', { timeZone: 'Europe/Stockholm' }).replace(' ', 'T')) - nu;
+    if (isNaN(skift)) skift = 0;
+    function blinka(p) { p.el.classList.remove('gar'); void p.el.offsetWidth; p.el.classList.add('gar'); }
+    function fraga() {
+      if (Date.now() > slut || !punkter.length) return;
+      setTimeout(fraga, 4000);
+      if (document.hidden) return;
+      var p = punkter[tur++ % punkter.length];
+      fetch('https://transport.integration.sl.se/v1/sites/' + p.plats + '/departures?transport=' + p.slag + '&forecast=5')
+        .then(function (s) { return s.ok ? s.json() : null; })
+        .then(function (svar) {
+          ((svar && svar.departures) || []).forEach(function (a) {
+            var resa = a.journey || {}, nyckel = p.plats + ':' + resa.id, om = new Date(a.expected) - skift - Date.now();
+            if (resa.state === 'CANCELLED' || blinkat[nyckel] || isNaN(om) || om < -20000 || om > 120000) return;
+            blinkat[nyckel] = 1;
+            setTimeout(function () { blinka(p); }, Math.max(0, om));
+          });
+        })
+        .catch(function () {}); // utan svar står punkterna stilla
+    }
+    fraga();
+  }
+  if (!lugnt && window.fetch) avgangar();
 
   // Flygningen är långsam: trettio bilder i sekunden räcker och sparar batteri.
   var start = null, senast = -1e9, igang = true, STEGTID = 1000 / 30 - 2;
