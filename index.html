@@ -201,6 +201,14 @@ document.getElementById('anmalan').addEventListener('submit', function (h) {
     for (var i = 0; i + 3 < s.length; i += 2) strand.push(s[i] / 2, s[i + 1] / 2, 0.5, s[i + 2] / 2, s[i + 3] / 2, 0.5);
   });
 
+  // Vattnet: en mörkare yta och täta vågräta linjer, som vatten ritas på ett kartblad.
+  var vatten = [], vagor = [], VAG = 14;
+  for (v = 0; v + 3 < (data.v || []).length; v += 4) {
+    var x1 = data.v[v] / 2, y1 = data.v[v + 1] / 2, x2 = data.v[v + 2] / 2, y2 = data.v[v + 3] / 2;
+    vatten.push(x1, y1, 0, x2, y1, 0, x2, y2, 0, x1, y1, 0, x2, y2, 0, x1, y2, 0);
+    for (var vy = Math.ceil(y1 / VAG) * VAG; vy < y2; vy += VAG) vagor.push(x1, vy, 0.2, x2, vy, 0.2);
+  }
+
   // Mätpunkterna är prydnad utan namn: ungefärliga lägen (lat, lon, höjd i meter) spridda över innerstaden.
   var punkter = [
     [59.3274, 18.0543, 110], [59.3276, 18.0679, 70], [59.3268, 18.0717, 75],
@@ -220,7 +228,8 @@ document.getElementById('anmalan').addEventListener('submit', function (h) {
   // Geometrin sparas som taltabeller, så att allt kan byggas om ifall webbläsaren tar tillbaka grafikminnet.
   ytor = new Float32Array(ytor); kanter = new Float32Array(kanter); rutnat = new Float32Array(rutnat);
   strand = new Float32Array(strand); lod = new Float32Array(lod);
-  var uVp, uFarg, uDis, aP, bYtor, bKanter, bRutnat, bStrand, bLod;
+  vatten = new Float32Array(vatten); vagor = new Float32Array(vagor);
+  var uVp, uFarg, uDis, aP, bYtor, bKanter, bRutnat, bStrand, bLod, bVatten, bVagor;
 
   function skuggare(typ, kod) {
     var s = gl.createShader(typ); gl.shaderSource(s, kod); gl.compileShader(s);
@@ -242,6 +251,7 @@ document.getElementById('anmalan').addEventListener('submit', function (h) {
     gl.uniform3fv(gl.getUniformLocation(prog, 'botten'), BOTTEN);
     aP = gl.getAttribLocation(prog, 'p'); gl.enableVertexAttribArray(aP);
     bYtor = buffert(ytor); bKanter = buffert(kanter); bRutnat = buffert(rutnat); bStrand = buffert(strand); bLod = buffert(lod);
+    bVatten = buffert(vatten); bVagor = buffert(vagor);
     return true;
   }
   if (!bygg()) { duk.style.display = 'none'; hallare.style.display = 'none'; return; }
@@ -308,7 +318,9 @@ document.getElementById('anmalan').addEventListener('submit', function (h) {
     rita(bYtor, gl.TRIANGLES, [0.052, 0.098, 0.079]);
     gl.disable(gl.POLYGON_OFFSET_FILL); gl.depthMask(false);
     rita(bRutnat, gl.LINES, [0.2, 0.3, 0.255]);
-    rita(bStrand, gl.LINES, [0.42, 0.53, 0.47]);
+    rita(bVatten, gl.TRIANGLES, [0.016, 0.04, 0.036]); // täcker rutnätet: nätet ligger bara på land
+    rita(bVagor, gl.LINES, [0.13, 0.215, 0.195]);
+    rita(bStrand, gl.LINES, [0.6, 0.74, 0.66]);
     rita(bKanter, gl.LINES, [0.56, 0.69, 0.62]);
     rita(bLod, gl.LINES, [0.784, 0.945, 0.31]);
 
